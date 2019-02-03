@@ -5,9 +5,12 @@ You can edit this file as you like.
 { name =
     "calendar-heat-map"
 , dependencies =
-    [ "prelude"
+    [ "bouzuya-datetime"
+    , "formatters"
+    , "prelude"
     , "psci-support"
     , "react-basic"
+    , "simple-json"
     , "test-unit"
     ]
 , packages =

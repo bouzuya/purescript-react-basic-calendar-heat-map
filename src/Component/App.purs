@@ -4,20 +4,32 @@ module Component.App
 
 import Prelude
 
+import Bouzuya.DateTime (Date, DateTime(..), exactDateFromWeekOfYear)
 import Component.AppStyle as Style
 import Data.Array as Array
-import React.Basic (Component, JSX, Self, StateUpdate(..), createComponent, make)
+import Data.Enum (toEnum)
+import Data.Formatter.DateTime (FormatterCommand(..), format)
+import Data.List as List
+import Data.Maybe (Maybe, fromMaybe)
+import Foreign.Object (Object)
+import Foreign.Object as Object
+import Partial.Unsafe (unsafePartial)
+import React.Basic (Component, JSX, Self, StateUpdate(..), capture, createComponent, make)
 import React.Basic.DOM (css)
 import React.Basic.DOM as H
+import React.Basic.DOM.Events (targetValue)
+import Simple.JSON as SimpleJSON
 
 type Props =
   {}
 
 type State =
-  {}
+  { jsonObject :: Object Int
+  , jsonText :: String
+  }
 
 data Action
-  = Noop
+  = UpdateJson String
 
 component :: Component Props
 component = createComponent "App"
@@ -27,7 +39,9 @@ app = make component { initialState, render, update } {}
 
 initialState :: State
 initialState =
-  {}
+  { jsonObject: Object.empty
+  , jsonText: "{}"
+  }
 
 render :: Self Props State Action -> JSX
 render self =
@@ -46,7 +60,14 @@ render self =
       , children:
         [ H.label_
           [ H.span_ [ H.text "data" ]
-          , H.textarea_ []
+          , H.textarea
+            { onChange:
+                capture
+                  self
+                  targetValue
+                  (\v -> UpdateJson (fromMaybe "" v))
+            , value: self.state.jsonText
+            }
           ]
         , H.table
           { className: Style.table
@@ -63,10 +84,29 @@ render self =
                       , children: [ H.text weekdayString ]
                       }
                     ] <>
-                    ( (Array.range 0 53) <#>
-                      (\_ -> -- weekNumber
+                    ( (Array.range 1 53) <#>
+                      (\weekNumber -> -- weekNumber
                         let
-                          value = 0
+                          date :: Maybe Date
+                          date = do
+                            y <- toEnum 2019 -- TODO
+                            woy <- toEnum weekNumber
+                            dow <- toEnum weekdayNumber
+                            exactDateFromWeekOfYear y woy dow
+                          dateString :: Date -> String
+                          dateString d =
+                            format
+                              (List.fromFoldable
+                                [ YearFull
+                                , Placeholder "-"
+                                , MonthTwoDigits
+                                , Placeholder "-"
+                                , DayOfMonthTwoDigits
+                                ])
+                            (DateTime d bottom)
+                          value = fromMaybe 0 do
+                            d <- date
+                            Object.lookup (dateString d) self.state.jsonObject
                           color v = case v of
                             0 -> "#f00"
                             _ -> "transparent"
@@ -79,7 +119,7 @@ render self =
                               , children: [ H.text (show value) ]
                               , style: css { backgroundColor: color value }
                               }
-                            ] -- data[weekNumber][weekdayNumber]
+                            ]
                           }
                       )
                     )
@@ -96,4 +136,9 @@ render self =
   }
 
 update :: Self Props State Action -> Action -> StateUpdate Props State Action
-update self Noop = NoUpdate
+update self (UpdateJson s) =
+  Update
+    (self.state
+      { jsonObject = fromMaybe Object.empty (SimpleJSON.readJSON_ s)
+      , jsonText = s
+      })

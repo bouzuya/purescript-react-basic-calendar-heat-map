@@ -102,7 +102,7 @@ render self =
                           date = do
                             y <- toEnum 2019 -- TODO
                             woy <- toEnum weekNumber
-                            dow <- toEnum weekdayNumber
+                            dow <- toEnum (weekdayNumber + 1)
                             exactDateFromWeekOfYear y woy dow
                           dateString :: Date -> String
                           dateString d =

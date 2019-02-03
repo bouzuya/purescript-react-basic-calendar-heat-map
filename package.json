@@ -44,6 +44,7 @@
     "install:purs": "spago install",
     "prepare": "npm-run-all -s 'install:purs' build",
     "purs": "purs",
+    "repl": "spago repl",
     "serve": "npm-run-all -p 'serve:*'",
     "serve:parcel": "parcel ./index.html",
     "serve:style": "npm-run-all -p 'serve:style:*'",

@@ -11,6 +11,7 @@ import Data.Enum (toEnum)
 import Data.Formatter.DateTime (FormatterCommand(..), format)
 import Data.List as List
 import Data.Maybe (Maybe, fromMaybe)
+import Data.Tuple (Tuple(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
 import Partial.Unsafe (unsafePartial)
@@ -37,10 +38,18 @@ component = createComponent "App"
 app :: JSX
 app = make component { initialState, render, update } {}
 
+initialJSON :: Object Int
+initialJSON =
+  Object.fromFoldable
+    [ Tuple "2019-01-01" 0
+    , Tuple "2019-01-02" 1
+    , Tuple "2019-01-03" 2
+    ]
+
 initialState :: State
 initialState =
-  { jsonObject: Object.empty
-  , jsonText: "{}"
+  { jsonObject: initialJSON
+  , jsonText: SimpleJSON.writeJSON initialJSON
   }
 
 render :: Self Props State Action -> JSX

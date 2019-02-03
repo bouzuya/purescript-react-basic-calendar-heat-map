@@ -1,3 +1,35 @@
 .app {
   background-color: red;
 }
+
+.table {
+  border-collapse: collapse;
+}
+
+.th {
+  box-sizing: border-box;
+  font-size: 8px;
+  height: 12px;
+  width: 32px;
+}
+
+.td {
+  box-sizing: border-box;
+  font-size: 8px;
+  height: 12px;
+  width: 12px;
+}
+
+.value {
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  color: transparent;
+  cursor: pointer;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.value:hover {
+  border: 1px solid #000;
+}

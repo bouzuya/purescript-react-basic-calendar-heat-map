@@ -1,7 +1,7 @@
 {
   "name": "purescript-react-basic-calendar-heat-map",
   "description": "[mockmock.dev #202](https://mockmock.connpass.com/event/119387/) w010 application.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": {
     "url": "https://bouzuya.net/",
     "name": "bouzuya",

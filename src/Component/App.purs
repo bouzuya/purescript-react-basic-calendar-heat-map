@@ -25,7 +25,8 @@ type Props =
   {}
 
 type State =
-  { jsonObject :: Object Int
+  { colors :: Array String
+  , jsonObject :: Object Int
   , jsonText :: String
   }
 
@@ -48,7 +49,8 @@ initialJSON =
 
 initialState :: State
 initialState =
-  { jsonObject: initialJSON
+  { colors: ["#eee", "#999", "#333"]
+  , jsonObject: initialJSON
   , jsonText: SimpleJSON.writeJSON initialJSON
   }
 
@@ -116,9 +118,10 @@ render self =
                           value = fromMaybe 0 do
                             d <- date
                             Object.lookup (dateString d) self.state.jsonObject
-                          color v = case v of
-                            0 -> "#f00"
-                            _ -> "transparent"
+                          color v =
+                            fromMaybe
+                              "transparent"
+                              (Array.index self.state.colors v)
                         in
                           H.td
                           { className: Style.td

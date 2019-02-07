@@ -4,17 +4,15 @@ module Component.App
 
 import Prelude
 
-import Bouzuya.DateTime (Date, DateTime(..), WeekOfYear, Weekday, exactDateFromWeekOfYear)
+import Bouzuya.DateTime (Date, WeekOfYear, Weekday, exactDateFromWeekOfYear)
 import Component.AppStyle as Style
 import Data.Array as Array
 import Data.Enum (enumFromTo, toEnum)
-import Data.Formatter.DateTime (FormatterCommand(..), format)
-import Data.List as List
 import Data.Maybe (Maybe, fromMaybe)
 import Data.Tuple (Tuple(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
-import Format (dayOfWeekShortName)
+import Format as Format
 import React.Basic (Component, JSX, Self, StateUpdate(..), capture, createComponent, make)
 import React.Basic.DOM (css)
 import React.Basic.DOM as H
@@ -92,7 +90,7 @@ render self =
                   H.tr_
                   ( [ H.th
                       { className: Style.th
-                      , children: [ H.text (dayOfWeekShortName dow) ]
+                      , children: [ H.text (Format.dayOfWeekShortName dow) ]
                       }
                     ] <>
                     ( (enumFromTo bottom top :: Array WeekOfYear) <#>
@@ -102,20 +100,9 @@ render self =
                           date = do
                             y <- toEnum 2019 -- TODO
                             exactDateFromWeekOfYear y woy dow
-                          dateString :: Date -> String
-                          dateString d =
-                            format
-                              (List.fromFoldable
-                                [ YearFull
-                                , Placeholder "-"
-                                , MonthTwoDigits
-                                , Placeholder "-"
-                                , DayOfMonthTwoDigits
-                                ])
-                            (DateTime d bottom)
                           value = fromMaybe 0 do
                             d <- date
-                            Object.lookup (dateString d) self.state.jsonObject
+                            Object.lookup (Format.iso8601Date d) self.state.jsonObject
                           color v =
                             fromMaybe
                               "transparent"

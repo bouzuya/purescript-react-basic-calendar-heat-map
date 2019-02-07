@@ -1,6 +1,7 @@
 module Format
   ( dayOfWeekShortName
   , iso8601Date
+  , monthShortName
   ) where
 
 import Data.Date as Date
@@ -28,3 +29,7 @@ iso8601Date d =
     ]
   )
   (DateTime.DateTime d bottom)
+
+-- Jan, Feb, ...
+monthShortName :: Date.Month -> String
+monthShortName = String.take 3 <<< show

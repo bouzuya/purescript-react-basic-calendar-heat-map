@@ -2,10 +2,10 @@ module Test.Format
   ( tests
   ) where
 
-import Data.Date (Weekday, exactDate)
+import Data.Date (Month, Weekday, exactDate)
 import Data.Enum (enumFromTo, toEnum)
 import Data.Maybe (Maybe(..))
-import Format (dayOfWeekShortName, iso8601Date)
+import Format (dayOfWeekShortName, iso8601Date, monthShortName)
 import Prelude (bind, bottom, discard, top, (<$>))
 import Test.Unit (TestSuite, suite, test)
 import Test.Unit.Assert as Assert
@@ -25,3 +25,20 @@ tests = suite "Format" do
         month <- toEnum 1
         dom <- toEnum 2
         exactDate year month dom)
+
+  test "monthShortName" do
+    Assert.equal
+      [ "Jan"
+      , "Feb"
+      , "Mar"
+      , "Apr"
+      , "May"
+      , "Jun"
+      , "Jul"
+      , "Aug"
+      , "Sep"
+      , "Oct"
+      , "Nov"
+      , "Dec"
+      ]
+      (monthShortName <$> enumFromTo bottom top :: Array Month)

@@ -4,17 +4,17 @@ module Component.App
 
 import Prelude
 
-import Bouzuya.DateTime (Date, DateTime(..), exactDateFromWeekOfYear)
+import Bouzuya.DateTime (Date, DateTime(..), Weekday, exactDateFromWeekOfYear)
 import Component.AppStyle as Style
 import Data.Array as Array
-import Data.Enum (toEnum)
+import Data.Enum (enumFromTo, toEnum)
 import Data.Formatter.DateTime (FormatterCommand(..), format)
 import Data.List as List
 import Data.Maybe (Maybe, fromMaybe)
 import Data.Tuple (Tuple(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
-import Partial.Unsafe (unsafePartial)
+import Format (dayOfWeekShortName)
 import React.Basic (Component, JSX, Self, StateUpdate(..), capture, createComponent, make)
 import React.Basic.DOM (css)
 import React.Basic.DOM as H
@@ -86,13 +86,13 @@ render self =
             [ H.thead_
               []
             , H.tbody_
-              ( flip Array.mapWithIndex
-                ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                (\weekdayNumber weekdayString ->
+              (
+                (enumFromTo bottom top :: Array Weekday) <#>
+                (\dow ->
                   H.tr_
                   ( [ H.th
                       { className: Style.th
-                      , children: [ H.text weekdayString ]
+                      , children: [ H.text (dayOfWeekShortName dow) ]
                       }
                     ] <>
                     ( (Array.range 1 53) <#>
@@ -102,7 +102,6 @@ render self =
                           date = do
                             y <- toEnum 2019 -- TODO
                             woy <- toEnum weekNumber
-                            dow <- toEnum (weekdayNumber + 1)
                             exactDateFromWeekOfYear y woy dow
                           dateString :: Date -> String
                           dateString d =

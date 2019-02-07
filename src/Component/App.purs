@@ -4,14 +4,14 @@ module Component.App
 
 import Prelude
 
-import Bouzuya.DateTime (Date, WeekOfYear, Weekday, Year, exactDateFromWeekOfYear)
+import Bouzuya.DateTime (WeekOfYear, Weekday, Year, exactDateFromWeekOfYear, month)
 import Component.AppStyle as Style
 import Data.Array as Array
-import Data.Enum (Cardinality(..), cardinality, enumFromTo, fromEnum, toEnum)
-import Data.Formatter.DateTime (FormatterCommand(..))
+import Data.Array.NonEmpty as NonEmptyArray
+import Data.Enum (Cardinality, cardinality, enumFromTo, fromEnum, toEnum)
 import Data.Int as Int
 import Data.Maybe (Maybe, fromJust, fromMaybe)
-import Data.Newtype (un, unwrap)
+import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -103,26 +103,56 @@ render self =
               ]
             , H.tbody_
               (
-                (enumFromTo bottom top :: Array Weekday) <#>
-                (\dow ->
+                [
                   H.tr_
-                  ( [ H.th
-                      { className: Style.th
-                      , children: [ H.text (Format.dayOfWeekShortName dow) ]
-                      }
-                    ] <>
-                    ( (enumFromTo bottom top :: Array WeekOfYear) <#>
-                      (\woy ->
-                        let
-                          colorIndex = fromMaybe 0 do
-                            lookupValue
-                              self.state.year
-                              woy
-                              dow
-                              self.state.jsonObject
-                          color = fromMaybe "transparent"
-                            (Array.index self.state.colors colorIndex)
-                        in
+                  ( [ H.th_ [] ] <>
+                    (
+                      Array.group
+                      ( (enumFromTo bottom top :: Array WeekOfYear) <#>
+                        (\woy ->
+                          exactDateFromWeekOfYear self.state.year woy bottom) <#>
+                        (\dateMaybe -> fromMaybe "" do
+                          d <- dateMaybe
+                          pure (Format.monthShortName (month d)))) <#>
+                      (\g ->
+                        Tuple
+                          (if NonEmptyArray.length g < 4
+                            then ""
+                            else (NonEmptyArray.head g))
+                          (NonEmptyArray.length g)) <#>
+                      (\(Tuple monthName colSpan) ->
+                        H.th
+                        { className: Style.thMonth
+                        , children: [ H.text monthName ]
+                        , colSpan: (Int.toNumber colSpan)
+                        })
+                    )
+                  )
+                ] <>
+                ( (enumFromTo bottom top :: Array Weekday) <#>
+                  (\dow ->
+                    H.tr_
+                    ( [ H.th
+                        { className: Style.th
+                        , children: [ H.text (Format.dayOfWeekShortName dow) ]
+                        }
+                      ] <>
+                      ( (enumFromTo bottom top :: Array WeekOfYear) <#>
+                        (\woy ->
+                            fromMaybe
+                              0
+                              (lookupValue
+                                self.state.year
+                                woy
+                                dow
+                                self.state.jsonObject)) <#>
+                        (\colorIndex ->
+                          let
+                            color = fromMaybe "transparent"
+                              (Array.index self.state.colors colorIndex)
+                          in
+                            Tuple colorIndex color) <#>
+                        (\(Tuple colorIndex color) ->
                           H.td
                           { className: Style.td
                           , children:
@@ -133,6 +163,7 @@ render self =
                               }
                             ]
                           }
+                        )
                       )
                     )
                   )

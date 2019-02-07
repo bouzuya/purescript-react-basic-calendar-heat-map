@@ -20,6 +20,14 @@
   width: 32px;
 }
 
+.th-month {
+  text-align: left;
+  box-sizing: border-box;
+  font-size: 10px;
+  font-weight: bold;
+  height: 14px;
+}
+
 .td {
   box-sizing: border-box;
   font-size: 8px;

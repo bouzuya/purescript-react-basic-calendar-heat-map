@@ -3,7 +3,8 @@ module Test.Main
   ) where
 
 import Effect (Effect)
-import Prelude (Unit)
+import Prelude (Unit, discard)
+import Test.Format as Format
 import Test.Unit (suite, test)
 import Test.Unit.Assert as Assert
 import Test.Unit.Main (runTest)
@@ -13,3 +14,4 @@ main = runTest do
   suite "Main" do
     test "1 == 1" do
       Assert.equal 1 1
+  Format.tests

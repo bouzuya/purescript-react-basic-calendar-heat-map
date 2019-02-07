@@ -4,7 +4,7 @@ module Component.App
 
 import Prelude
 
-import Bouzuya.DateTime (Date, DateTime(..), Weekday, exactDateFromWeekOfYear)
+import Bouzuya.DateTime (Date, DateTime(..), WeekOfYear, Weekday, exactDateFromWeekOfYear)
 import Component.AppStyle as Style
 import Data.Array as Array
 import Data.Enum (enumFromTo, toEnum)
@@ -95,13 +95,12 @@ render self =
                       , children: [ H.text (dayOfWeekShortName dow) ]
                       }
                     ] <>
-                    ( (Array.range 1 53) <#>
-                      (\weekNumber -> -- weekNumber
+                    ( (enumFromTo bottom top :: Array WeekOfYear) <#>
+                      (\woy ->
                         let
                           date :: Maybe Date
                           date = do
                             y <- toEnum 2019 -- TODO
-                            woy <- toEnum weekNumber
                             exactDateFromWeekOfYear y woy dow
                           dateString :: Date -> String
                           dateString d =

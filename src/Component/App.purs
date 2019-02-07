@@ -10,7 +10,7 @@ import Data.Array as Array
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Enum (Cardinality, cardinality, enumFromTo, fromEnum, toEnum)
 import Data.Int as Int
-import Data.Maybe (Maybe, fromJust, fromMaybe)
+import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
 import Foreign.Object (Object)
@@ -147,30 +147,37 @@ render self =
                         }
                       ] <>
                       ( (enumFromTo bottom top :: Array WeekOfYear) <#>
-                        (\woy ->
-                            fromMaybe
-                              0
-                              (lookupValue
-                                self.state.year
-                                woy
-                                dow
-                                self.state.jsonObject)) <#>
-                        (\colorIndex ->
-                          let
-                            color = fromMaybe "transparent"
-                              (Array.index self.state.colors colorIndex)
-                          in
-                            Tuple colorIndex color) <#>
-                        (\(Tuple colorIndex color) ->
+                        (\woy -> do
+                          d <- exactDateFromWeekOfYear self.state.year woy dow
+                          pure (Format.iso8601Date d)) <#>
+                        (\dateMaybe ->
+                          case dateMaybe of
+                            Nothing -> Nothing
+                            Just date ->
+                              let
+                                valueMaybe = Object.lookup date self.state.jsonObject
+                                value = fromMaybe zero valueMaybe
+                                colorIndex = fromMaybe 0 valueMaybe
+                                color =
+                                  fromMaybe
+                                    "transparent"
+                                    (Array.index self.state.colors colorIndex)
+                                label = date <> " : " <> show value
+                              in Just { color, label, value }) <#>
+                        (\infoMaybe ->
                           H.td
                           { className: Style.td
                           , children:
-                            [ H.span
-                              { className: Style.value
-                              , children: [ H.text (show colorIndex) ]
-                              , style: css { backgroundColor: color }
-                              }
-                            ]
+                            case infoMaybe of
+                              Nothing -> []
+                              Just { color, label, value } ->
+                                [ H.span
+                                  { className: Style.value
+                                  , children: [ H.text (show value) ]
+                                  , style: css { backgroundColor: color }
+                                  , title: label
+                                  }
+                                ]
                           }
                         )
                       )

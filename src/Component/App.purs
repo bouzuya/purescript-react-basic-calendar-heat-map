@@ -96,13 +96,11 @@ render self =
                     ( (enumFromTo bottom top :: Array WeekOfYear) <#>
                       (\woy ->
                         let
-                          date :: Maybe Date
-                          date = do
+                          colorIndex = fromMaybe 0 do
                             y <- toEnum 2019 -- TODO
-                            exactDateFromWeekOfYear y woy dow
-                          value = fromMaybe 0 do
-                            d <- date
-                            Object.lookup (Format.iso8601Date d) self.state.jsonObject
+                            d <- exactDateFromWeekOfYear y woy dow
+                            k <- pure (Format.iso8601Date d)
+                            Object.lookup k self.state.jsonObject
                           color v =
                             fromMaybe
                               "transparent"
@@ -113,8 +111,8 @@ render self =
                           , children:
                             [ H.span
                               { className: Style.value
-                              , children: [ H.text (show value) ]
-                              , style: css { backgroundColor: color value }
+                              , children: [ H.text (show colorIndex) ]
+                              , style: css { backgroundColor: color colorIndex }
                               }
                             ]
                           }

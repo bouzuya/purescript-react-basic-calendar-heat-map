@@ -50,9 +50,18 @@ app = make component { initialState, render, update } {}
 initialJSON :: Object Int
 initialJSON =
   Object.fromFoldable
-    [ Tuple "2019-01-01" 0
-    , Tuple "2019-01-02" 1
-    , Tuple "2019-01-03" 2
+    [ Tuple "2019-01-01" 1
+    , Tuple "2019-01-02" 2
+    , Tuple "2019-02-01" 1
+    , Tuple "2019-02-02" 2
+    , Tuple "2019-02-03" 1
+    , Tuple "2019-02-04" 2
+    , Tuple "2019-03-01" 1
+    , Tuple "2019-03-02" 2
+    , Tuple "2019-03-03" 1
+    , Tuple "2019-04-01" 1
+    , Tuple "2019-04-02" 2
+    , Tuple "2019-04-03" 1
     ]
 
 initialState :: State
@@ -94,7 +103,7 @@ render self =
           , children:
             [ H.thead_
               [ H.tr_
-                [ H.td
+                [ H.th
                   { children: [ H.text (show (fromEnum self.state.year)) ]
                   , className: Style.tableTitle
                   , colSpan: Int.toNumber (1 + unwrap (cardinality :: Cardinality WeekOfYear))

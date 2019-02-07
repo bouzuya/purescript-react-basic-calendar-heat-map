@@ -4,15 +4,19 @@ module Component.App
 
 import Prelude
 
-import Bouzuya.DateTime (Date, WeekOfYear, Weekday, exactDateFromWeekOfYear)
+import Bouzuya.DateTime (Date, WeekOfYear, Weekday, Year, exactDateFromWeekOfYear)
 import Component.AppStyle as Style
 import Data.Array as Array
-import Data.Enum (enumFromTo, toEnum)
-import Data.Maybe (Maybe, fromMaybe)
+import Data.Enum (Cardinality(..), cardinality, enumFromTo, fromEnum, toEnum)
+import Data.Formatter.DateTime (FormatterCommand(..))
+import Data.Int as Int
+import Data.Maybe (Maybe, fromJust, fromMaybe)
+import Data.Newtype (un, unwrap)
 import Data.Tuple (Tuple(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
 import Format as Format
+import Partial.Unsafe (unsafePartial)
 import React.Basic (Component, JSX, Self, StateUpdate(..), capture, createComponent, make)
 import React.Basic.DOM (css)
 import React.Basic.DOM as H
@@ -26,10 +30,16 @@ type State =
   { colors :: Array String
   , jsonObject :: Object Int
   , jsonText :: String
+  , year :: Year
   }
 
 data Action
   = UpdateJson String
+
+lookupValue :: Year -> WeekOfYear -> Weekday -> Object Int -> Maybe Int
+lookupValue y woy dow obj = do
+  d <- exactDateFromWeekOfYear y woy dow
+  Object.lookup (Format.iso8601Date d) obj
 
 component :: Component Props
 component = createComponent "App"
@@ -50,6 +60,7 @@ initialState =
   { colors: ["#eee", "#999", "#333"]
   , jsonObject: initialJSON
   , jsonText: SimpleJSON.writeJSON initialJSON
+  , year: unsafePartial (fromJust (toEnum 2019))
   }
 
 render :: Self Props State Action -> JSX
@@ -82,7 +93,14 @@ render self =
           { className: Style.table
           , children:
             [ H.thead_
-              []
+              [ H.tr_
+                [ H.td
+                  { children: [ H.text (show (fromEnum self.state.year)) ]
+                  , className: Style.tableTitle
+                  , colSpan: Int.toNumber (1 + unwrap (cardinality :: Cardinality WeekOfYear))
+                  }
+                ]
+              ]
             , H.tbody_
               (
                 (enumFromTo bottom top :: Array Weekday) <#>
@@ -97,14 +115,13 @@ render self =
                       (\woy ->
                         let
                           colorIndex = fromMaybe 0 do
-                            y <- toEnum 2019 -- TODO
-                            d <- exactDateFromWeekOfYear y woy dow
-                            k <- pure (Format.iso8601Date d)
-                            Object.lookup k self.state.jsonObject
-                          color v =
-                            fromMaybe
-                              "transparent"
-                              (Array.index self.state.colors v)
+                            lookupValue
+                              self.state.year
+                              woy
+                              dow
+                              self.state.jsonObject
+                          color = fromMaybe "transparent"
+                            (Array.index self.state.colors colorIndex)
                         in
                           H.td
                           { className: Style.td
@@ -112,7 +129,7 @@ render self =
                             [ H.span
                               { className: Style.value
                               , children: [ H.text (show colorIndex) ]
-                              , style: css { backgroundColor: color colorIndex }
+                              , style: css { backgroundColor: color }
                               }
                             ]
                           }

@@ -6,18 +6,25 @@
   border-collapse: collapse;
 }
 
+.table-title {
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
 .th {
   box-sizing: border-box;
-  font-size: 8px;
-  height: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  height: 14px;
   width: 32px;
 }
 
 .td {
   box-sizing: border-box;
   font-size: 8px;
-  height: 12px;
-  width: 12px;
+  height: 14px;
+  width: 14px;
 }
 
 .value {

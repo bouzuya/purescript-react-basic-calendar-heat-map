@@ -2,10 +2,11 @@ module Test.Format
   ( tests
   ) where
 
-import Data.Date (Weekday)
-import Data.Enum (enumFromTo)
-import Format (dayOfWeekShortName)
-import Prelude (bottom, top, (<$>))
+import Data.Date (Weekday, exactDate)
+import Data.Enum (enumFromTo, toEnum)
+import Data.Maybe (Maybe(..))
+import Format (dayOfWeekShortName, iso8601Date)
+import Prelude (bind, bottom, discard, top, (<$>))
 import Test.Unit (TestSuite, suite, test)
 import Test.Unit.Assert as Assert
 
@@ -15,3 +16,12 @@ tests = suite "Format" do
     Assert.equal
       (["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
       (dayOfWeekShortName <$> enumFromTo bottom top :: Array Weekday)
+
+  test "iso8601Date" do
+    Assert.equal
+      (Just "2019-01-02")
+      (iso8601Date <$> do
+        year <- toEnum 2019
+        month <- toEnum 1
+        dom <- toEnum 2
+        exactDate year month dom)

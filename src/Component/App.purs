@@ -151,12 +151,8 @@ render self =
                   ( [ H.th_ [] ] <>
                     (
                       Array.group
-                      ( (enumFromTo bottom top :: Array WeekOfYear) <#>
-                        (\woy ->
-                          Date.exactDateFromWeekOfYear self.state.year woy bottom) <#>
-                        (\dateMaybe -> fromMaybe "" do
-                          d <- dateMaybe
-                          pure (Format.monthShortName (month d)))) <#>
+                      ( (fromMaybe [] ((calendarDates self.state.year) >>= Array.head)) <#>
+                        (\weeks -> Format.monthShortName (Date.month (WeekDate.toDate weeks)))) <#>
                       (\g ->
                         Tuple
                           (if NonEmptyArray.length g < 4

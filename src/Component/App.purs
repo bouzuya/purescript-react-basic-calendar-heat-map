@@ -4,7 +4,8 @@ module Component.App
 
 import Prelude
 
-import Bouzuya.DateTime (WeekOfYear, Weekday, Year, exactDateFromWeekOfYear, month)
+import Bouzuya.DateTime (Date, WeekOfYear, Weekday, Year, exactDate, month, weekOfYear, weekYear)
+import Bouzuya.DateTime as Date
 import Component.AppStyle as Style
 import Data.Array as Array
 import Data.Array.NonEmpty as NonEmptyArray
@@ -22,6 +23,8 @@ import React.Basic.DOM (css)
 import React.Basic.DOM as H
 import React.Basic.DOM.Events (targetValue)
 import Simple.JSON as SimpleJSON
+import WeekDate (WeekDate)
+import WeekDate as WeekDate
 
 type Props =
   {}
@@ -36,10 +39,41 @@ type State =
 data Action
   = UpdateJson String
 
-lookupValue :: Year -> WeekOfYear -> Weekday -> Object Int -> Maybe Int
-lookupValue y woy dow obj = do
-  d <- exactDateFromWeekOfYear y woy dow
-  Object.lookup (Format.iso8601Date d) obj
+calendarDates :: Year -> Maybe (Array (Array WeekDate))
+calendarDates year = do
+  f <- firstDayOfHeatMap year
+  l <- lastDayOfHeatMap year
+  pure (groupByWeekday (map WeekDate.toWeekDate (enumFromTo f l :: Array Date)))
+  where
+    firstDayOfHeatMap :: Year -> Maybe Date
+    firstDayOfHeatMap y = do
+      d <- exactDate y bottom bottom
+      Date.exactDateFromWeekOfYear (weekYear d) (weekOfYear d) bottom
+
+    lastDayOfHeatMap :: Year -> Maybe Date
+    lastDayOfHeatMap y = do
+      d <- exactDate y top top
+      Date.exactDateFromWeekOfYear (weekYear d) (weekOfYear d) top
+
+    weekdays :: Array Weekday
+    weekdays = enumFromTo bottom top
+
+    groupByWeekday :: Array WeekDate -> Array (Array WeekDate)
+    groupByWeekday = -- [ [W53-1, W01-1, ...], [W53-2, W01-2, ...], ... ]
+      compose
+        (Array.foldl
+          (\b a -> Array.zipWith (<>) b (map Array.singleton a))
+          (Array.replicate (Array.length weekdays) []))
+        groupByWeek
+
+    groupByWeek :: Array WeekDate -> Array (Array WeekDate)
+    groupByWeek = -- [ [W53-1, W53-2, ...], [W01-1, W01-2, ...], ...]
+      compose
+        (map NonEmptyArray.toArray)
+        (Array.groupBy
+          (\a b ->
+            WeekDate.weekYear a == WeekDate.weekYear b &&
+            WeekDate.weekOfYear a == WeekDate.weekOfYear b))
 
 component :: Component Props
 component = createComponent "App"
@@ -119,7 +153,7 @@ render self =
                       Array.group
                       ( (enumFromTo bottom top :: Array WeekOfYear) <#>
                         (\woy ->
-                          exactDateFromWeekOfYear self.state.year woy bottom) <#>
+                          Date.exactDateFromWeekOfYear self.state.year woy bottom) <#>
                         (\dateMaybe -> fromMaybe "" do
                           d <- dateMaybe
                           pure (Format.monthShortName (month d)))) <#>
@@ -138,32 +172,42 @@ render self =
                     )
                   )
                 ] <>
-                ( (enumFromTo bottom top :: Array Weekday) <#>
-                  (\dow ->
+                ( (fromMaybe [] (calendarDates self.state.year)) <#>
+                  (\wds ->
                     H.tr_
                     ( [ H.th
                         { className: Style.th
-                        , children: [ H.text (Format.dayOfWeekShortName dow) ]
+                        , children:
+                          [ H.text
+                            ( fromMaybe
+                                ""
+                                ( Format.dayOfWeekShortName <<<
+                                  WeekDate.dayOfWeek <$>
+                                  (Array.head wds)
+                                )
+                            )
+                          ]
                         }
                       ] <>
-                      ( (enumFromTo bottom top :: Array WeekOfYear) <#>
-                        (\woy -> do
-                          d <- exactDateFromWeekOfYear self.state.year woy dow
-                          pure (Format.iso8601Date d)) <#>
-                        (\dateMaybe ->
-                          case dateMaybe of
-                            Nothing -> Nothing
-                            Just date ->
-                              let
-                                valueMaybe = Object.lookup date self.state.jsonObject
-                                value = fromMaybe zero valueMaybe
-                                colorIndex = fromMaybe 0 valueMaybe
-                                color =
-                                  fromMaybe
-                                    "transparent"
-                                    (Array.index self.state.colors colorIndex)
-                                label = date <> " : " <> show value
-                              in Just { color, label, value }) <#>
+                      ( wds <#>
+                        (\wd ->
+                          let date = WeekDate.toDate wd
+                          in
+                            if Date.year date == self.state.year
+                            then Just (Format.iso8601Date date)
+                            else Nothing) <#>
+                        (\dateMaybe -> do
+                          date <- dateMaybe
+                          let
+                            valueMaybe = Object.lookup date self.state.jsonObject
+                            value = fromMaybe zero valueMaybe
+                            colorIndex = fromMaybe 0 valueMaybe
+                            color =
+                              fromMaybe
+                                "transparent"
+                                (Array.index self.state.colors colorIndex)
+                            label = date <> " : " <> show value
+                          pure { color, label, value }) <#>
                         (\infoMaybe ->
                           H.td
                           { className: Style.td

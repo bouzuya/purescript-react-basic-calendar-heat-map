@@ -31,13 +31,15 @@ type Props =
 
 type State =
   { colors :: Array String
+  , colorsText :: String
   , jsonObject :: Object Int
   , jsonText :: String
   , year :: Year
   }
 
 data Action
-  = UpdateJson String
+  = UpdateColors String
+  | UpdateJson String
 
 calendarDates :: Year -> Maybe (Array (Array WeekDate))
 calendarDates year = do
@@ -81,6 +83,9 @@ component = createComponent "App"
 app :: JSX
 app = make component { initialState, render, update } {}
 
+initialColors :: Array String
+initialColors = ["#eee", "#999", "#333"]
+
 initialJSON :: Object Int
 initialJSON =
   Object.fromFoldable
@@ -100,7 +105,8 @@ initialJSON =
 
 initialState :: State
 initialState =
-  { colors: ["#eee", "#999", "#333"]
+  { colors: initialColors
+  , colorsText: SimpleJSON.writeJSON initialColors
   , jsonObject: initialJSON
   , jsonText: SimpleJSON.writeJSON initialJSON
   , year: unsafePartial (fromJust (toEnum 2019))
@@ -130,6 +136,17 @@ render self =
                   targetValue
                   (\v -> UpdateJson (fromMaybe "" v))
             , value: self.state.jsonText
+            }
+          ]
+        , H.label_
+          [ H.span_ [ H.text "colors" ]
+          , H.textarea
+            { onChange:
+                capture
+                  self
+                  targetValue
+                  (\v -> UpdateColors (fromMaybe "" v))
+            , value: self.state.colorsText
             }
           ]
         , H.table
@@ -235,6 +252,12 @@ render self =
   }
 
 update :: Self Props State Action -> Action -> StateUpdate Props State Action
+update self (UpdateColors s) =
+  Update
+    (self.state
+      { colors = fromMaybe [] (SimpleJSON.readJSON_ s)
+      , colorsText = s
+      })
 update self (UpdateJson s) =
   Update
     (self.state

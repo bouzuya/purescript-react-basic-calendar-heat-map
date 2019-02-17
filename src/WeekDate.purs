@@ -51,7 +51,7 @@ toISOString :: WeekDate -> String
 toISOString wd =
   let
     y = fromEnum (weekYear wd)
-    woy = fromEnum (weekYear wd)
+    woy = fromEnum (weekOfYear wd)
     dow = fromEnum (dayOfWeek wd)
     pad2 n
       | n < 10 = "0" <> show n
@@ -61,7 +61,7 @@ toISOString wd =
       | n < 100 = "00" <> show n
       | n < 1000 = "0" <> show n
       | otherwise = show n
-  in intercalate "," [pad4 y, "-W", pad2 woy, "-", show dow]
+  in intercalate "" [pad4 y, "-W", pad2 woy, "-", show dow]
 
 toWeekDate :: BouzuyaDate.Date -> WeekDate
 toWeekDate d =
